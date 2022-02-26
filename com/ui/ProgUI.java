@@ -9,6 +9,7 @@ public class ProgUI extends JFrame
 {
 	private static final long serialVersionUID = -577119706971836732L;
 
+	private KhasengerPanel kPanel;
 	public ProgUI()
 	{
 		super();
@@ -16,8 +17,7 @@ public class ProgUI extends JFrame
 			setTitle("Khasenger");
 			setLayout(new BorderLayout());
 			
-		ProgPanel ppnel = new ProgPanel();
-			add(ppnel);
+			add(new AuthScreen(this), BorderLayout.CENTER);
 			pack();
 			setResizable(false);
 			setLocationRelativeTo(null);
