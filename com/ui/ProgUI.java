@@ -9,7 +9,7 @@ public class ProgUI extends JFrame
 {
 	private static final long serialVersionUID = -577119706971836732L;
 
-	private KhasengerPanel kPanel;
+//	private KhasengerPanel kPanel;
 	public ProgUI()
 	{
 		super();

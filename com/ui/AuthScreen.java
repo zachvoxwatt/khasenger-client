@@ -10,6 +10,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -64,6 +65,8 @@ class AuthForm extends JPanel
 	private Insets i;
 	private JTextField inputIP, inputName;
 	private JPasswordField inputSecKey;
+	private JButton connect;
+	private JLabel connectionStatus;
 	
 	public AuthForm(AuthScreen as)
 	{
@@ -104,8 +107,15 @@ class AuthForm extends JPanel
 			inputName.setHorizontalAlignment(JTextField.CENTER);
 			inputName.setPreferredSize(new Dimension(250, 35));
 			inputName.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-			gbc.gridx = 1; gbc.gridy = 3; gbc.insets = generateInsets(7, 0, 0, 0);
+			gbc.gridx = 1; gbc.gridy = 3; gbc.insets = generateInsets(7, 0, 7, 0);
 			add(inputName, gbc);
+			
+		this.connect = new JButton("Login and Chat!");
+			connect.setFont(new Font("Segoe UI", Font.BOLD, 20));
+			connect.setPreferredSize(new Dimension(250, 35));
+			connect.setFocusPainted(false);
+			gbc.gridx = 1; gbc.gridy = 4; gbc.insets = generateInsets(7, 0, 0, 0);
+			add(connect, gbc);
 	}
 	
 	Insets generateInsets(int top, int left, int bott, int right) { return new Insets(top, left, bott, right); }
