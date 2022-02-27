@@ -1,4 +1,4 @@
-package main;
+package net;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -39,13 +39,20 @@ public class NetworkClient
 	    				
 	    				switch (b)
 	    				{
-	    					case -1:
-	    						disconnect();
-	    						break;
-	    						
 	    					case 71:
 	    						String incomingText = getFromServer.readUTF();
 	    						parent.getKhasengerPanel().appendTextToPane(incomingText);
+	    						break;
+	    				
+	    					case -1:
+	    						disconnect();
+	    						break;
+	    				
+	    					case -127:
+	    						parent.showAuthScreen();
+	    						terminateConnection();
+	    						break;
+	    						
 	    					default:
 	    						break;
 	    				}
@@ -99,11 +106,12 @@ public class NetworkClient
     	return success;
     }
     
-    public void postMessage(String content)
+    public void postMessage(String sender, String content)
     {
     	try
     	{
     		this.sendToServer.writeByte(17);
+    		this.sendToServer.writeUTF(sender);
     		this.sendToServer.writeUTF(content);
     		this.sendToServer.flush();
     	}

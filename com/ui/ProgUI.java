@@ -7,7 +7,7 @@ import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
 
-import main.NetworkClient;
+import net.NetworkClient;
 
 public class ProgUI extends JFrame
 {

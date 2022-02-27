@@ -6,6 +6,10 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
@@ -18,13 +22,14 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
-import main.NetworkClient;
+import net.NetworkClient;
 
 public class KhasengerPanel extends JPanel 
 {
 	private static final long serialVersionUID = 2384367241632160071L;
 	private int width = 1280, height = 720;
 	
+	private ScheduledExecutorService timers;
 	private ProgUI parent;
 	private InputPane iPane;
 	private ConversationPane convoPane;
@@ -36,6 +41,7 @@ public class KhasengerPanel extends JPanel
 	public KhasengerPanel(ProgUI pui, NetworkClient ncl)
 	{
 		super();
+		this.timers = Executors.newSingleThreadScheduledExecutor(new TimerNamer());
 		this.parent = pui;
 		this.cl = ncl;
 			setLayout(new FlowLayout(FlowLayout.LEADING, 5, 5));
@@ -54,6 +60,9 @@ public class KhasengerPanel extends JPanel
 			this.convoScroller.getViewport().addChangeListener(new ViewChangeListener());
 			add(this.convoScroller);
 	
+		Runnable convoScrollerRefresher = new Runnable() { public void run() { convoScroller.revalidate(); convoScroller.repaint(); } };
+		timers.scheduleWithFixedDelay(convoScrollerRefresher, 0, 5, TimeUnit.MILLISECONDS);
+		
 		JPanel separator = new JPanel();
 			scx = (int) ((int) this.getPreferredSize().getWidth() * 99.3 / 100);
 			scy = (int) ((int) this.getPreferredSize().getHeight() * 0.25 / 10);
@@ -102,7 +111,7 @@ public class KhasengerPanel extends JPanel
 		String username = this.cl.getUsername();
 		String sentText = String.format("<%s> %s\n\n", username, this.getInputPane().getText());
 		
-		this.cl.postMessage(sentText);
+		this.cl.postMessage(username, sentText);
 		this.iPane.setText("");
 	}
 	
@@ -120,6 +129,12 @@ public class KhasengerPanel extends JPanel
 	public InputPane getInputPane() { return this.iPane; }
 	public Font getChatFont() { return this.chatFont; }
 	public NetworkClient getNetClient() { return this.cl; }
+	
+	class TimerNamer implements ThreadFactory
+	{
+		@Override
+		public Thread newThread(Runnable r) { return new Thread(r, "Khasenger Panel Timer"); }
+	}
 	
 	class PostMessageFunction implements ActionListener
 	{

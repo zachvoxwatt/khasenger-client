@@ -23,7 +23,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import main.NetworkClient;
+import net.NetworkClient;
 
 public class AuthScreen extends JPanel
 {
