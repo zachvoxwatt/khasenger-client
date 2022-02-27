@@ -41,7 +41,7 @@ public class Server
 					try
 					{
 						Socket cSock = sSock.accept();
-						System.out.printf("[Server] Client at %s has connected\n", cSock.getInetAddress().getHostAddress());
+						System.out.printf("[Server / Incoming] Client at %s has connected\n\n", cSock.getInetAddress().getHostAddress());
 						ServerThread sThrd = new ServerThread(self, cSock);
 						
 						activeConnections.add(sThrd);
@@ -54,6 +54,11 @@ public class Server
 		
 		this.recv = new Thread(this.listener, "Connection Receptionist");
 		startServer();
+	}
+	
+	public void sendAllClient(String content)
+	{
+		for (ServerThread itor: this.activeConnections) itor.sendMessage(content);
 	}
 	
 	public void startServer()
@@ -108,11 +113,16 @@ class ServerThread implements Runnable
 		try
 		{
 			this.isActive = false;
+			this.sv.terminate(this);
+			
 			this.cSock.close();
 			this.getFromClient.close();
 			this.sendToClient.close();
+
+			this.cSock = null;
+			this.getFromClient = null;
+			this.sendToClient = null;
 			
-			this.sv.terminate(this);
 		}
 		catch (Exception e) { e.printStackTrace(); }
 	}
@@ -125,26 +135,49 @@ class ServerThread implements Runnable
 			while (this.isActive)
 			{
 				byte b = this.getFromClient.readByte();
-				System.out.println(b);
 				
 				switch (b)
 				{
 					case 1:
 						String sec = this.getFromClient.readUTF();
-						if (sec.equals(this.sv.getSecKey())) this.sendToClient.writeByte(7);
-						else this.sendToClient.writeByte(-1);
+						String name = this.getFromClient.readUTF();
+						String info = String.format("[Server / Info] Client @ %s is authenticating...\n\n", this.cSock.getInetAddress().getHostAddress());
+						logConsole(info);
+						
+						if (sec.equals(this.sv.getSecKey()))
+						{
+							this.sendToClient.writeByte(7);
+							this.sendToClient.flush();
+							String success = String.format("[Server / Info] Client @ %s authenticated successfully\n\n", this.cSock.getInetAddress().getHostAddress());
+							logConsole(success);
+							
+							String announce = String.format("\t>>>> %s has joined the chat!\n\n", name);
+							this.sv.sendAllClient(announce);
+							break;
+						}
+						else
+						{
+							this.sendToClient.writeByte(-1);
+							String fail = String.format("[Server / Info] Client @ %s failed authentication\n\n", this.cSock.getInetAddress().getHostAddress());
+							logConsole(fail);
+						}
 						break;
 						
-					case 2:
-						this.sendToClient.writeUTF("[Server] B");
+					case -69:
+						String username = this.getFromClient.readUTF();
+						String onleaveconsole = String.format("[Server / Info] User %s of client @ %s has left the chat...\n\n", username, this.cSock.getInetAddress().getHostAddress());
+						logConsole(onleaveconsole);
 						break;
 
-					case 3:
-						this.sendToClient.writeUTF("[Server] C");
+					case 17:
+						String content = this.getFromClient.readUTF();
+						this.sv.sendAllClient(content);
 						break;
 						
-					case 4:
-						this.sendToClient.writeUTF("[Server] D");
+					case -127:
+						String onleftconsole = String.format("[Server / Info] Client @ %s has left the chat...\n\n", this.cSock.getInetAddress().getHostAddress());
+						logConsole(onleftconsole);
+						this.isActive = false;
 						break;
 						
 					case 5:
@@ -156,6 +189,13 @@ class ServerThread implements Runnable
 						break;
 						
 					default:
+						String leaveName = this.getFromClient.readUTF();
+						String dis = String.format("[Server / Info] Client @ %s disconnected\n\n", this.cSock.getInetAddress().getHostAddress());
+						logConsole(dis);
+						
+						String onleave = String.format("\t>>>> %s has left the chat\n\n", leaveName);
+						this.sv.sendAllClient(onleave);
+						
 						this.isActive = false;
 						break;
 				}
@@ -166,4 +206,16 @@ class ServerThread implements Runnable
 		catch (Exception e) { e.printStackTrace(); }
 	}
 	
+	public void sendMessage(String text)
+	{
+		try
+		{
+			this.sendToClient.writeByte(71);
+			this.sendToClient.writeUTF(text);
+			this.sendToClient.flush();
+		}
+		catch (Exception e) { e.printStackTrace(); }
+	}
+	
+	void logConsole(String s) { System.out.printf(s); }
 }
