@@ -39,6 +39,9 @@ public class ProgUI extends JFrame
 		this.appActive = false;
 		remove(this.kPanel);
 		add(this.authS);
+		this.kPanel = null;
+		System.gc();
+		
 		pack();
 		setLocationRelativeTo(null);
 		revalidate();

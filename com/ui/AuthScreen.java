@@ -43,6 +43,7 @@ public class AuthScreen extends JPanel
 			this.parent = pui;
 			setPreferredSize(new Dimension(this.wx, this.wy));
 			setLayout(new BorderLayout());
+			setBackground(Color.ORANGE);
 		
 		this.form = new AuthForm(this);
 			this.form.setPreferredSize(new Dimension(this.wx, this.wy * (100 - 12 * 2) / 100));
@@ -51,11 +52,13 @@ public class AuthScreen extends JPanel
 		margin1 = new JPanel();
 			margin1.setPreferredSize(new Dimension(this.wx, this.wy * 12 / 100));
 			margin1.setLayout(new GridBagLayout());
+			margin1.setOpaque(false);
 			JLabel title = new JLabel("KHASENGER");
 			title.setFont(new Font("Comic Sans MS", Font.BOLD, 40));
 			margin1.add(title);
 			
 		margin2 = new JPanel();
+			margin2.setOpaque(false);
 			margin2.setPreferredSize(new Dimension(this.wx, this.wy * 12 * 2 / 100));
 			margin2.setLayout(new GridBagLayout());
 			
@@ -112,6 +115,7 @@ class AuthForm extends JPanel
 			this.gbc = new GridBagConstraints();
 			this.parent = as;
 			setLayout(new GridBagLayout());
+			setOpaque(false);
 			
 		JLabel ipLabel = new JLabel("Target IP: ");
 			ipLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
@@ -129,6 +133,7 @@ class AuthForm extends JPanel
 			add(usernameLabel, gbc);
 			
 		this.inputIP = new JTextField();
+			inputIP.setBackground(Color.YELLOW);
 			inputIP.setHorizontalAlignment(JTextField.CENTER);
 			inputIP.setPreferredSize(new Dimension(250, 35));
 			inputIP.setFont(new Font("Segoe UI", Font.PLAIN, 20));
@@ -136,12 +141,14 @@ class AuthForm extends JPanel
 			add(inputIP, gbc);
 			
 		this.inputSecKey = new JPasswordField();
+			inputSecKey.setBackground(Color.YELLOW);
 			inputSecKey.setHorizontalAlignment(JPasswordField.CENTER);
 			inputSecKey.setPreferredSize(new Dimension(250, 35));
 			gbc.gridx = 1; gbc.gridy = 2; gbc.insets = generateInsets(7, 0, 7, 0);
 			add(inputSecKey, gbc);
 			
 		this.inputName = new JTextField();
+			inputName.setBackground(Color.YELLOW);
 			inputName.setHorizontalAlignment(JTextField.CENTER);
 			inputName.setPreferredSize(new Dimension(250, 35));
 			inputName.setFont(new Font("Segoe UI", Font.PLAIN, 20));
@@ -155,6 +162,24 @@ class AuthForm extends JPanel
 			connect.addActionListener(new LoginFunction(this, connect));
 			gbc.gridx = 1; gbc.gridy = 4; gbc.insets = generateInsets(7, 0, 0, 0);
 			add(connect, gbc);
+	}
+	
+	public void disableInputs()
+	{
+		this.inputIP.setEditable(false);
+		this.inputSecKey.setEditable(false);
+		this.inputName.setEditable(false);
+		this.connect.setEnabled(false);
+		revalidate(); repaint();
+	}
+	
+	public void enableInputs()
+	{
+		this.inputIP.setEditable(true);
+		this.inputSecKey.setEditable(true);
+		this.inputName.setEditable(true);
+		this.connect.setEnabled(true);
+		revalidate(); repaint();
 	}
 	
 	Insets generateInsets(int top, int left, int bott, int right) { return new Insets(top, left, bott, right); }
@@ -200,7 +225,7 @@ class AuthForm extends JPanel
 				
 				else
 				{
-					Pattern p = Pattern.compile("[^A-Za-z0-9 ]");
+					Pattern p = Pattern.compile("[^A-Za-z0-9_ ]");
 					Matcher m1 = p.matcher(key);
 					Matcher m2 = p.matcher(name);
 					
@@ -213,12 +238,12 @@ class AuthForm extends JPanel
 				}
 			}
 			b.setText("Connecting...");
+			form.disableInputs();
 			
 			Runnable action = new Runnable()
 			{
 				public void run()
 				{
-					
 					NetworkClient cl;
 					if (Objects.isNull(form.getAuthScreen().getMainProgClass().getNetClient()))
 						cl = form.getAuthScreen().getMainProgClass().iniNetClient(ip, key, name);
@@ -245,6 +270,7 @@ class AuthForm extends JPanel
 									form.getIPField().setText("");
 									form.getPassField().setText("");
 									form.getNameField().setText("");
+									form.enableInputs();
 								}
 							};
 							
@@ -252,8 +278,9 @@ class AuthForm extends JPanel
 						}
 						else
 						{
-							String msg = "Error! Invalid Security Key";
+							String msg = "<html><body>Connection Refused!<br>Invalid Authentication Key</body></html>";
 							form.getAuthScreen().changeNotice(msg, Color.RED);
+							form.enableInputs();
 							b.setText("Login and Chat!");
 							cl.disconnect(true);
 							return;
@@ -262,10 +289,11 @@ class AuthForm extends JPanel
 					
 					else
 					{
-						String msg = "Error! Unknown Host: " + ip;
+						String msg = "<html><body>Connection Refused!<br>Unknown Host: " + ip + "</body></html>";
 						form.getAuthScreen().changeNotice(msg, Color.RED);
+						form.enableInputs();
 						b.setText("Login and Chat!");
-						cl.disconnect(true);
+						cl.disposeLinks();
 						return;
 					}
 				}

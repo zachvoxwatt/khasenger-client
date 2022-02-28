@@ -154,6 +154,13 @@ public class NetworkClient
         catch (Exception e) { e.printStackTrace(); }
     }
     
+    public void disposeLinks()
+    {
+		this.cSock = null;
+		this.getFromServer = null;
+		this.sendToServer = null;
+    }
+    
     public void terminateConnection()
     {
     	try
