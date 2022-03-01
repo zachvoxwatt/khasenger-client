@@ -34,16 +34,16 @@ public class AuthScreen extends JPanel
 	private JPanel margin1, margin2;
 	private AuthForm form;
 	private JLabel connectionStatus;
-	private ScheduledExecutorService timers;
+	private ScheduledExecutorService dthrds;
 	
 	public AuthScreen(ProgUI pui)
 	{
 		super();
-			this.timers = Executors.newSingleThreadScheduledExecutor(new TimersNamer());
+			this.dthrds = Executors.newSingleThreadScheduledExecutor(new DiscreteThreadsNamer());
 			this.parent = pui;
 			setPreferredSize(new Dimension(this.wx, this.wy));
 			setLayout(new BorderLayout());
-			setBackground(Color.ORANGE);
+			setBackground(new Color(255, 179, 71, 255));
 		
 		this.form = new AuthForm(this);
 			this.form.setPreferredSize(new Dimension(this.wx, this.wy * (100 - 12 * 2) / 100));
@@ -63,27 +63,24 @@ public class AuthScreen extends JPanel
 			margin2.setLayout(new GridBagLayout());
 			
 		this.connectionStatus = new JLabel();
-			connectionStatus.setFont(new Font("Segoe UI", Font.PLAIN, 22));
+			connectionStatus.setFont(new Font("Consolas", Font.PLAIN, 18));
 			connectionStatus.setVisible(false);
 			margin2.add(connectionStatus);
 			
 			add(margin1, BorderLayout.NORTH);
 			add(margin2, BorderLayout.SOUTH);
+
+		repaint();
 	}
 	
-	class TimersNamer implements ThreadFactory
+	class DiscreteThreadsNamer implements ThreadFactory
 	{ 
+		private int count = 1;
     	@Override 
-    	public Thread newThread(Runnable r) { return new Thread(r, "Timer Namer Thread"); } 
+    	public Thread newThread(Runnable r) { return new Thread(r, "Discrete Thread #" + ++count); } 
     }
 	
-	Runnable timeoutMessage = new Runnable()
-	{
-		public void run()
-		{
-			connectionStatus.setVisible(false);
-		}
-	};
+	Runnable timeoutMessage = new Runnable() { public void run() {connectionStatus.setVisible(false);}};
 	
 	public void changeNotice(String message, Color c)
 	{
@@ -92,10 +89,10 @@ public class AuthScreen extends JPanel
 		connectionStatus.setVisible(true);
 		connectionStatus.revalidate(); connectionStatus.repaint();
 		
-		this.timers.schedule(timeoutMessage, 2, TimeUnit.SECONDS);	
+		this.dthrds.schedule(timeoutMessage, 2, TimeUnit.SECONDS);	
 	}
 	
-	public ScheduledExecutorService getTimers() { return this.timers; }
+	public ScheduledExecutorService getTimers() { return this.dthrds; }
 	public ProgUI getMainProgClass() { return this.parent; }
 }
 
@@ -108,6 +105,7 @@ class AuthForm extends JPanel
 	private JTextField inputIP, inputName;
 	private JPasswordField inputSecKey;
 	private JButton connect;
+	private Color formColor = new Color(255,229,180, 255);
 	
 	public AuthForm(AuthScreen as)
 	{
@@ -133,25 +131,25 @@ class AuthForm extends JPanel
 			add(usernameLabel, gbc);
 			
 		this.inputIP = new JTextField();
-			inputIP.setBackground(Color.YELLOW);
+			inputIP.setBackground(this.formColor);
 			inputIP.setHorizontalAlignment(JTextField.CENTER);
 			inputIP.setPreferredSize(new Dimension(250, 35));
-			inputIP.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+			inputIP.setFont(new Font("Segoe UI", Font.PLAIN, 18));
 			gbc.gridx = 1; gbc.gridy = 1; gbc.insets = generateInsets(7, 0, 7, 0);
 			add(inputIP, gbc);
 			
 		this.inputSecKey = new JPasswordField();
-			inputSecKey.setBackground(Color.YELLOW);
+			inputSecKey.setBackground(this.formColor);
 			inputSecKey.setHorizontalAlignment(JPasswordField.CENTER);
 			inputSecKey.setPreferredSize(new Dimension(250, 35));
 			gbc.gridx = 1; gbc.gridy = 2; gbc.insets = generateInsets(7, 0, 7, 0);
 			add(inputSecKey, gbc);
 			
 		this.inputName = new JTextField();
-			inputName.setBackground(Color.YELLOW);
+			inputName.setBackground(this.formColor);
 			inputName.setHorizontalAlignment(JTextField.CENTER);
 			inputName.setPreferredSize(new Dimension(250, 35));
-			inputName.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+			inputName.setFont(new Font("Segoe UI", Font.PLAIN, 18));
 			gbc.gridx = 1; gbc.gridy = 3; gbc.insets = generateInsets(7, 0, 7, 0);
 			add(inputName, gbc);
 			

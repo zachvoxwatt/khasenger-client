@@ -7,6 +7,8 @@ import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
 
+import audio.AudioController;
+import audio.JSONDataParser;
 import net.NetworkClient;
 
 public class ProgUI extends JFrame
@@ -14,6 +16,7 @@ public class ProgUI extends JFrame
 	private boolean appActive = false;
 	private static final long serialVersionUID = -577119706971836732L;
 
+	private AudioController aud;
 	private NetworkClient cl;
 	private KhasengerPanel kPanel;
 	private AuthScreen authS;
@@ -25,6 +28,7 @@ public class ProgUI extends JFrame
 			setTitle("Khasenger");
 			setLayout(new BorderLayout());
 			
+		this.aud = new AudioController(new JSONDataParser().getDirectoryMap());	
 		this.authS = new AuthScreen(this);
 			add(this.authS, BorderLayout.CENTER);
 			pack();
@@ -51,7 +55,7 @@ public class ProgUI extends JFrame
 	public void showConversationPane()
 	{
 		this.appActive = true;
-		this.kPanel = new KhasengerPanel(this, this.cl);
+		this.kPanel = new KhasengerPanel(this, this.cl, this.aud);
 		remove(this.authS);
 		add(this.kPanel);
 		pack();
@@ -62,6 +66,7 @@ public class ProgUI extends JFrame
 	
 	public boolean isAppActive() { return this.appActive; }
 	
+	public AudioController getAudioController() { return this.aud; }
 	public KhasengerPanel getKhasengerPanel() { return this.kPanel; }
 	public NetworkClient iniNetClient(String a, String b, String c) { this.cl = new NetworkClient(a, b, c, this); return this.cl; } 
 	public NetworkClient getNetClient() { return this.cl; }

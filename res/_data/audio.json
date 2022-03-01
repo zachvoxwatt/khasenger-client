@@ -1,0 +1,12 @@
+[
+    {
+        "id": "send",
+        "type": "sound",
+        "various": false
+    },
+    {
+        "id": "receive",
+        "type": "sound",
+        "various": false
+    }
+]

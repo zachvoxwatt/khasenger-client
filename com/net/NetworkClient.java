@@ -16,7 +16,7 @@ public class NetworkClient
 	private ProgUI parent;
     private String ip, seckey, username, errorMsg;
     private Socket cSock;
-    private Runnable listener;
+    private Runnable listener, vitalCheck;
     private DataOutputStream sendToServer;
     private DataInputStream getFromServer;
     private ScheduledExecutorService cpu;
@@ -25,29 +25,32 @@ public class NetworkClient
     {
     	this.parent = pui;
     	this.ip = ip; this.seckey = seckey; this.username = username;
-    	this.cpu = Executors.newSingleThreadScheduledExecutor(new ThreadNamer());
+    	this.cpu = Executors.newScheduledThreadPool(5, new ThreadNamer());
     	
     	this.listener = new Runnable()
     	{
-    		public void run()
-    		{
-    			try
-    			{
-	    			if (isValidAssetsReady())
-	    			{
+    		public void run() {
+    			try {
+	    			if (isValidAssetsReady()) {
 	    				byte b = getFromServer.readByte();
 	    				
-	    				switch (b)
-	    				{
+	    				switch (b) {
+	    					//get incoming message from server
 	    					case 71:
 	    						String incomingText = getFromServer.readUTF();
 	    						parent.getKhasengerPanel().appendTextToPane(incomingText);
 	    						break;
-	    				
+	    					
+	    					//server has acknowledged 'i am still alive' request
+	    					case 20:
+	    						break;
+	    						
+	    					//disconnect request
 	    					case -1:
 	    						disconnect();
 	    						break;
-	    				
+	    					
+	    					//lost connection request
 	    					case -127:
 	    						parent.showAuthScreen();
 	    						terminateConnection();
@@ -62,7 +65,17 @@ public class NetworkClient
     		}
     	};
     	
-    	this.cpu.scheduleWithFixedDelay(listener, 0, 100, TimeUnit.MILLISECONDS);
+    	this.vitalCheck = new Runnable()
+    	{
+    		public void run()
+    		{
+    			try { if (isValidAssetsReady()) { sendToServer.writeByte(2); sendToServer.flush(); }}
+    			catch (Exception e) { e.printStackTrace(); }
+    		}
+    	};
+    	
+    	this.cpu.scheduleWithFixedDelay(listener, 0, 30, TimeUnit.MILLISECONDS);
+    	this.cpu.scheduleWithFixedDelay(vitalCheck, 0, 15, TimeUnit.SECONDS);
     }
     
     private boolean isValidAssetsReady()

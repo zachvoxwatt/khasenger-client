@@ -22,13 +22,16 @@ import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import audio.AudioController;
 import net.NetworkClient;
 
 public class KhasengerPanel extends JPanel 
 {
+	private boolean shouldPlayReceive = true;
 	private static final long serialVersionUID = 2384367241632160071L;
 	private int width = 1280, height = 720;
 	
+	private AudioController aud;
 	private ScheduledExecutorService timers;
 	private ProgUI parent;
 	private InputPane iPane;
@@ -38,9 +41,10 @@ public class KhasengerPanel extends JPanel
 	private JButton send, disconnect;
 	private NetworkClient cl;
 	
-	public KhasengerPanel(ProgUI pui, NetworkClient ncl)
+	public KhasengerPanel(ProgUI pui, NetworkClient ncl, AudioController au)
 	{
 		super();
+		this.aud = au;
 		this.timers = Executors.newSingleThreadScheduledExecutor(new TimerNamer());
 		this.parent = pui;
 		this.cl = ncl;
@@ -111,6 +115,8 @@ public class KhasengerPanel extends JPanel
 		String username = this.cl.getUsername();
 		String sentText = String.format("<%s> %s\n\n", username, this.getInputPane().getText());
 		
+		this.shouldPlayReceive = false;
+		this.aud.play("send");
 		this.cl.postMessage(username, sentText);
 		this.iPane.setText("");
 	}
@@ -118,8 +124,11 @@ public class KhasengerPanel extends JPanel
 	public void appendTextToPane(String text) 
 	{ 
 		this.convoPane.append(text); 
+		this.convoPane.setCaretPosition(this.convoPane.getText().length());
 		this.convoScroller.revalidate(); 
 		this.convoScroller.repaint();
+		if (this.shouldPlayReceive) this.aud.play("receive");
+		this.shouldPlayReceive = true;
 	}
 	
 	public ProgUI getMainProgUI() { return this.parent; }
@@ -143,7 +152,11 @@ public class KhasengerPanel extends JPanel
 		public PostMessageFunction(KhasengerPanel kp) { this.kPanel = kp; }
 		
 		@Override
-		public void actionPerformed(ActionEvent e) { this.kPanel.sendMessage(); }
+		public void actionPerformed(ActionEvent e) 
+		{ 
+			if (this.kPanel.getInputPane().getText().length() != 0) 
+				this.kPanel.sendMessage();
+		}
 	}
 	
 	class DisconnectFunction implements ActionListener
