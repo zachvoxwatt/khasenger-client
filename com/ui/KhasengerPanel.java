@@ -253,7 +253,11 @@ class InputPane extends JTextArea
 		
 		public Sender(InputPane ip) { this.ipane = ip; }
 		@Override
-		public void actionPerformed(ActionEvent e) { this.ipane.getKhasengerPanel().sendMessage(); }
+		public void actionPerformed(ActionEvent e) 
+		{ 
+			if (this.ipane.getText().isBlank()) return;
+			else this.ipane.getKhasengerPanel().sendMessage();
+		}
 	}
 	
 	class LineBreaker extends AbstractAction

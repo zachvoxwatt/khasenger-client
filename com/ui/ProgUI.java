@@ -6,6 +6,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
+import javax.swing.UIManager;
 
 import audio.AudioController;
 import audio.JSONDataParser;
@@ -71,7 +72,12 @@ public class ProgUI extends JFrame
 	public NetworkClient iniNetClient(String a, String b, String c) { this.cl = new NetworkClient(a, b, c, this); return this.cl; } 
 	public NetworkClient getNetClient() { return this.cl; }
 	
-	public static void main(String[] args) { EventQueue.invokeLater(ProgUI::new); }
+	public static void main(String[] args) 
+	{
+		try { UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName()); }
+		catch (Exception e) { e.printStackTrace(); }
+		EventQueue.invokeLater(ProgUI::new); 
+	}
 }
 
 class InteractiveWindowActions implements WindowListener
