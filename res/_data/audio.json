@@ -5,8 +5,18 @@
         "various": false
     },
     {
-        "id": "receive",
+        "id": "recv",
         "type": "sound",
+        "various": false
+    },
+    {
+    	"id": "join",
+    	"type": "sound",
+        "various": false
+    },
+    {
+    	"id": "leave",
+    	"type": "sound",
         "various": false
     }
 ]

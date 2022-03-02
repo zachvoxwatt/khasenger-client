@@ -27,7 +27,6 @@ import net.NetworkClient;
 
 public class KhasengerPanel extends JPanel 
 {
-	private boolean shouldPlayReceive = true;
 	private static final long serialVersionUID = 2384367241632160071L;
 	private int width = 1280, height = 720;
 	
@@ -64,7 +63,8 @@ public class KhasengerPanel extends JPanel
 			this.convoScroller.getViewport().addChangeListener(new ViewChangeListener());
 			add(this.convoScroller);
 	
-		Runnable convoScrollerRefresher = new Runnable() { public void run() { convoScroller.revalidate(); convoScroller.repaint(); } };
+		Runnable convoScrollerRefresher = new Runnable() 
+			{ public void run() { convoScroller.revalidate(); convoScroller.repaint(); } };
 		timers.scheduleWithFixedDelay(convoScrollerRefresher, 0, 5, TimeUnit.MILLISECONDS);
 		
 		JPanel separator = new JPanel();
@@ -110,26 +110,25 @@ public class KhasengerPanel extends JPanel
 		this.iPane.insert("\n", this.iPane.getCaretPosition());
 	}
 	
-	public void sendMessage()
-	{
-		String username = this.cl.getUsername();
-		String sentText = String.format("<%s> %s\n\n", username, this.getInputPane().getText());
-		
-		this.shouldPlayReceive = false;
-		this.aud.play("send");
-		this.cl.postMessage(username, sentText);
-		this.iPane.setText("");
-	}
-	
 	public void appendTextToPane(String text) 
 	{ 
 		this.convoPane.append(text); 
 		this.convoPane.setCaretPosition(this.convoPane.getText().length());
 		this.convoScroller.revalidate(); 
 		this.convoScroller.repaint();
-		if (this.shouldPlayReceive) this.aud.play("receive");
-		this.shouldPlayReceive = true;
 	}
+	
+	public void sendMessage()
+	{
+		String username = this.cl.getUsername();
+		String sentText = String.format("<%s> %s\n\n", username, this.getInputPane().getText());
+		
+		this.aud.play("send");
+		this.cl.postMessage(username, sentText);
+		this.iPane.setText("");
+	}
+	
+	public void playSound(String key) { this.aud.play(key); }
 	
 	public ProgUI getMainProgUI() { return this.parent; }
 	public JScrollPane getConvoScroller() { return this.convoScroller; }

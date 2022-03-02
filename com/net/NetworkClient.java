@@ -13,6 +13,9 @@ import ui.ProgUI;
 
 public class NetworkClient
 {
+	private boolean playRecv = true;
+	private static final int PORT = 1765;
+	
 	private ProgUI parent;
     private String ip, seckey, username, errorMsg;
     private Socket cSock;
@@ -35,21 +38,38 @@ public class NetworkClient
 	    				byte b = getFromServer.readByte();
 	    				
 	    				switch (b) {
+	    				
+	    					//get incoming new user join message from server
+	    					case 70:
+	    						String newlyJoined = getFromServer.readUTF();
+	    						parent.getKhasengerPanel().appendTextToPane(newlyJoined);
+	    						parent.getKhasengerPanel().playSound("join");
+	    						break;
+	    					
 	    					//get incoming message from server
 	    					case 71:
 	    						String incomingText = getFromServer.readUTF();
 	    						parent.getKhasengerPanel().appendTextToPane(incomingText);
+	    						if (playRecv) parent.getKhasengerPanel().playSound("recv");
+	    						else playRecv = true;
 	    						break;
 	    					
 	    					//server has acknowledged 'i am still alive' request
-	    					case 20:
-	    						break;
+	    					/*case 20:  instead of including this, default case is used.
+	    						break;*/
 	    						
 	    					//disconnect request
 	    					case -1:
 	    						disconnect();
 	    						break;
 	    					
+	    					//get incoming user leaving message from server
+	    					case -70:
+	    						String leavingUser = getFromServer.readUTF();
+	    						parent.getKhasengerPanel().appendTextToPane(leavingUser);
+	    						parent.getKhasengerPanel().playSound("leave");
+	    						break;
+	    						
 	    					//lost connection request
 	    					case -127:
 	    						parent.showAuthScreen();
@@ -93,7 +113,7 @@ public class NetworkClient
     	
     	try
         {
-            this.cSock = new Socket(this.ip, 1765);
+            this.cSock = new Socket(this.ip, PORT);
             this.sendToServer = new DataOutputStream(this.cSock.getOutputStream());
             this.getFromServer = new DataInputStream(this.cSock.getInputStream());
             success = true;
@@ -127,6 +147,7 @@ public class NetworkClient
     		this.sendToServer.writeUTF(sender);
     		this.sendToServer.writeUTF(content);
     		this.sendToServer.flush();
+    		this.playRecv = false;
     	}
     	catch (Exception e) { e.printStackTrace(); }
     }
@@ -179,6 +200,7 @@ public class NetworkClient
     	try
     	{
     		this.sendToServer.writeByte(-127);
+    		this.sendToServer.writeUTF(this.username);
     		this.sendToServer.flush();
     		
     		this.cSock.close();
