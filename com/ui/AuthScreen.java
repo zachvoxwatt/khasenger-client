@@ -160,6 +160,10 @@ class AuthForm extends JPanel
 			connect.addActionListener(new LoginFunction(this, connect));
 			gbc.gridx = 1; gbc.gridy = 4; gbc.insets = generateInsets(7, 0, 0, 0);
 			add(connect, gbc);
+			
+		this.inputIP.setText("localhost");
+		this.inputSecKey.setText("a");
+		this.inputName.setText("ZainVoJr");
 	}
 	
 	public void disableInputs()

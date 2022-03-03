@@ -4,6 +4,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.Executors;
@@ -13,7 +17,9 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
@@ -39,6 +45,8 @@ public class KhasengerPanel extends JPanel
 	private Font chatFont;
 	private JButton send, disconnect;
 	private NetworkClient cl;
+	private JPopupMenu jpm;
+	private PopupMenuItems pmi;
 	
 	public KhasengerPanel(ProgUI pui, NetworkClient ncl, AudioController au)
 	{
@@ -50,11 +58,15 @@ public class KhasengerPanel extends JPanel
 			setLayout(new FlowLayout(FlowLayout.LEADING, 5, 5));
 			setPreferredSize(new Dimension(this.width, this.height));
 			setBackground(new Color(28, 31, 34, 240));
-		
+	
+		this.jpm = new JPopupMenu();
+		this.pmi = new PopupMenuItems(this, this.jpm);
+			pmi.assignItemToMenu();
+			
 		int scx = 0, scy = 0;
 		
 		this.chatFont = new Font("Arial", Font.PLAIN, 18);
-		this.convoPane = new ConversationPane(this);
+		this.convoPane = new ConversationPane(this, this.jpm);
 		this.convoScroller = new JScrollPane(this.convoPane);
 			scx = (int) ((int) this.getPreferredSize().getWidth() * 99.3 / 100);
 			scy = (int) ((int) this.getPreferredSize().getHeight() * 76 / 100);
@@ -74,7 +86,7 @@ public class KhasengerPanel extends JPanel
 			separator.setBackground(Color.GRAY);
 			add(separator);
 			
-		this.iPane = new InputPane(this);
+		this.iPane = new InputPane(this, this.jpm);
 		this.inputScroller = new JScrollPane(this.iPane);
 			scx = (int) ((int) this.getPreferredSize().getWidth() * 66.1 / 100);
 			scy = (int) ((int) this.getPreferredSize().getHeight() * 1.925 / 10);
@@ -141,7 +153,7 @@ public class KhasengerPanel extends JPanel
 	class TimerNamer implements ThreadFactory
 	{
 		@Override
-		public Thread newThread(Runnable r) { return new Thread(r, "Khasenger Panel Timer"); }
+		public Thread newThread(Runnable r) { return new Thread(r, "Khasenger Panel Discrete Processor"); }
 	}
 	
 	class PostMessageFunction implements ActionListener
@@ -174,7 +186,69 @@ public class KhasengerPanel extends JPanel
 	
 	class ViewChangeListener implements ChangeListener
 	{
-		public void stateChanged(ChangeEvent e) { convoScroller.revalidate(); convoScroller.repaint(); }
+		public void stateChanged(ChangeEvent e) 
+			{ convoScroller.revalidate(); convoScroller.repaint(); }
+	}
+	
+	class PopupMenuItems
+	{
+		private boolean pasteAdded = false;
+		
+		private JPopupMenu jpm;
+		private JMenuItem copy, paste;
+		private KhasengerPanel kpanel;
+		
+		public PopupMenuItems(KhasengerPanel cp, JPopupMenu jpmf)
+		{
+			this.jpm = jpmf;
+			this.kpanel = cp;
+			copy = new JMenuItem("Copy Selected Text");
+			paste = new JMenuItem("Paste Selected Text");
+			
+			copy.addActionListener(new ActionListener()
+				{
+					public void actionPerformed(ActionEvent e)
+					{
+						StringSelection target = null;
+						
+						if (e.getSource().equals(kpanel.getConvoPane()))
+							target = new StringSelection(kpanel.getConvoPane().getSelectedText());
+						else if (e.getSource().equals(kpanel.getInputPane()))
+							target = new StringSelection(kpanel.getInputPane().getSelectedText());
+						
+						
+						Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+						clipboard.setContents(target, null);
+						
+						if (!pasteAdded) 
+						{
+							jpm.add(paste);
+							pasteAdded = true;
+						}
+					}
+				}
+			);
+			
+			paste.addActionListener(new ActionListener()
+				{
+					public void actionPerformed(ActionEvent e)
+					{
+						Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+						try 
+						{
+							String clipboardText = (String) clipboard.getData(DataFlavor.stringFlavor);
+							kpanel.getInputPane().insert(clipboardText, kpanel.getInputPane().getCaretPosition());
+						}
+						catch (Exception exc) 
+						{ 
+							System.out.println("Image Type Pasting is unsupported yet!"); 
+						}
+					}
+				}
+			);
+		}
+		
+		void assignItemToMenu() { this.jpm.add(copy); }
 	}
 }
 
@@ -183,11 +257,13 @@ class ConversationPane extends JTextArea
 	private static final long serialVersionUID = 4653119383864500640L;
 	
 	private KhasengerPanel parent;
+	private JPopupMenu rclickMenu;
 	
-	public ConversationPane(KhasengerPanel ppnl)
+	public ConversationPane(KhasengerPanel ppnl, JPopupMenu jpm)
 	{
 		super();
 			this.parent = ppnl;
+			this.rclickMenu = jpm;
 			
 			setText("[Khasenger v1.0 by Zaineyy]\n\n");
 			setFont(this.parent.getChatFont());
@@ -196,6 +272,7 @@ class ConversationPane extends JTextArea
 			setEditable(false);
 			setForeground(Color.WHITE);
 			setBackground(new Color(44, 49, 53, 175));
+			setComponentPopupMenu(this.rclickMenu);
 			getDocument().addDocumentListener(new ConversationRefresher(this));
 			
 		JButton blocker = new JButton();
@@ -224,16 +301,19 @@ class InputPane extends JTextArea
 {
 	private static final long serialVersionUID = -4506242901739223689L;
 	
+	private JPopupMenu rclickMenu;
 	private KhasengerPanel parent;
 	
-	public InputPane(KhasengerPanel ppnl)
+	public InputPane(KhasengerPanel ppnl, JPopupMenu jpm)
 	{
 		this.parent = ppnl;
+		this.rclickMenu = jpm;
 		
 		setFont(this.parent.getChatFont());
 		setWrapStyleWord(true);
 		setLineWrap(true);
 		getDocument().addDocumentListener(new DocumentValidator(this));
+		setComponentPopupMenu(this.rclickMenu);
 		
 		this.getInputMap().put(KeyStroke.getKeyStroke("shift ENTER"), "breakLine");
 		this.getActionMap().put("breakLine", new LineBreaker(this));
