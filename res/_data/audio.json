@@ -10,7 +10,12 @@
         "various": false
     },
     {
-    	"id": "join",
+    	"id": "join_client",
+    	"type": "sound",
+        "various": false
+    },
+    {
+    	"id": "join_user",
     	"type": "sound",
         "various": false
     },

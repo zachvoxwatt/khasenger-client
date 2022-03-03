@@ -16,8 +16,9 @@ public class NetworkClient
 	private boolean playRecv = true;
 	private static final int PORT = 1765;
 	
+	private ClientUser clusr;
 	private ProgUI parent;
-    private String ip, seckey, username, errorMsg;
+    private String ip, seckey;
     private Socket cSock;
     private Runnable listener, vitalCheck;
     private DataOutputStream sendToServer;
@@ -27,7 +28,8 @@ public class NetworkClient
     public NetworkClient(String ip, String seckey, String username, ProgUI pui)
     {
     	this.parent = pui;
-    	this.ip = ip; this.seckey = seckey; this.username = username;
+    	this.clusr = this.parent.getClientUser();
+    	this.ip = ip; this.seckey = seckey; this.clusr.setName(username);
     	this.cpu = Executors.newScheduledThreadPool(5, new ThreadNamer());
     	
     	this.listener = new Runnable()
@@ -43,7 +45,7 @@ public class NetworkClient
 	    					case 70:
 	    						String newlyJoined = getFromServer.readUTF();
 	    						parent.getKhasengerPanel().appendTextToPane(newlyJoined);
-	    						parent.getKhasengerPanel().playSound("join");
+	    						parent.getKhasengerPanel().playSound("join_user");
 	    						break;
 	    					
 	    					//get incoming message from server
@@ -118,7 +120,7 @@ public class NetworkClient
             this.getFromServer = new DataInputStream(this.cSock.getInputStream());
             success = true;
         }
-        catch (Exception e) { this.errorMsg = e.getMessage(); } 
+        catch (Exception e) {} 
     	return success;
     }
     
@@ -129,7 +131,7 @@ public class NetworkClient
     	{
     		this.sendToServer.writeByte(1);
     		this.sendToServer.writeUTF(this.seckey);
-    		this.sendToServer.writeUTF(this.username);
+    		this.sendToServer.writeUTF(this.clusr.getName());
     		this.sendToServer.flush();
     		if (this.getFromServer.readByte() == 7) success = true;
     	}
@@ -157,7 +159,7 @@ public class NetworkClient
     	try
     	{
     		this.sendToServer.writeByte(-69);
-    		this.sendToServer.writeUTF(this.username);
+    		this.sendToServer.writeUTF(this.clusr.getName());
     		this.sendToServer.flush();
     		disconnect(true);
     	}
@@ -171,7 +173,7 @@ public class NetworkClient
         try
         {
         	this.sendToServer.writeByte(-1);
-        	this.sendToServer.writeUTF(this.username);
+        	this.sendToServer.writeUTF(this.clusr.getName());
         	this.sendToServer.flush();
         	
             this.cSock.close();
@@ -200,7 +202,7 @@ public class NetworkClient
     	try
     	{
     		this.sendToServer.writeByte(-127);
-    		this.sendToServer.writeUTF(this.username);
+    		this.sendToServer.writeUTF(this.clusr.getName());
     		this.sendToServer.flush();
     		
     		this.cSock.close();
@@ -214,8 +216,10 @@ public class NetworkClient
     	catch (Exception e) { e.printStackTrace(); }
     }
     
-    public void resetInputs(String a, String b, String c) { this.ip = a; this.seckey = b; this.username = c; }
-    
-    public String getUsername() { return this.username; }
-    public String getErrorMessage() { return this.errorMsg; }
+    public void resetInputs(String a, String b, String c) 
+    { 
+    	this.ip = a; 
+    	this.seckey = b; 
+    	this.clusr.setName(c);
+    }
 }
