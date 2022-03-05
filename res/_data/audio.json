@@ -20,7 +20,7 @@
         "various": false
     },
     {
-    	"id": "leave",
+    	"id": "leave_user",
     	"type": "sound",
         "various": false
     }

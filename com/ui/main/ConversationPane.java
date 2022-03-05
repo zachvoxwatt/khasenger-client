@@ -5,7 +5,7 @@ import java.awt.Color;
 import javax.swing.JButton;
 import javax.swing.JTextArea;
 
-import ui.main.functions.ConversationPaneUpdater;
+import ui.main.functions.CPaneUpdater;
 
 public class ConversationPane extends JTextArea
 {
@@ -25,7 +25,7 @@ public class ConversationPane extends JTextArea
 			setEditable(false);
 			setForeground(Color.WHITE);
 			setBackground(new Color(44, 49, 53, 175));
-			getDocument().addDocumentListener(new ConversationPaneUpdater(this));
+			getDocument().addDocumentListener(new CPaneUpdater(this));
 			
 		JButton blocker = new JButton();
 			blocker.setPreferredSize(this.getPreferredSize());

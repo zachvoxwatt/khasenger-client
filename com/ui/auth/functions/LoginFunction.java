@@ -79,35 +79,42 @@ public class LoginFunction implements ActionListener
 				
 				if (cl.connect())
 				{
-					b.setText("Login and Chat!");
+					b.setText("Connect");
 					
 					if (cl.attemptAuth())
 					{
-						form.getAuthScreen().changeNotice("Connected!", new Color(0, 127, 0, 255));
-						form.getAuthScreen().getMainProgClass().getAudioController().play("join_client");
-						
-						Runnable showConvo = new Runnable()
+						if (cl.requestNameValidation())
 						{
-							public void run()
+							form.getAuthScreen().changeNotice("Connected!", new Color(0, 127, 0, 255));
+							form.getAuthScreen().getMainProgClass().getAudioController().play("join_client");
+							
+							Runnable showConvo = new Runnable()
 							{
-								form.getAuthScreen().getMainProgClass().showConversationPane();
-								b.setText("Login and Chat!");
-								form.getIPField().setText("");
-								form.getPassField().setText("");
-								form.getNameField().setText("");
-								form.enableInputs();
-							}
-						};
-						
-						form.getAuthScreen().getTimers().schedule(showConvo, 500, TimeUnit.MILLISECONDS);
+								public void run()
+								{
+									form.getAuthScreen().getMainProgClass().showConversationPane();
+									b.setText("Connect");
+									form.enableInputs();
+								}
+							};
+							
+							form.getAuthScreen().getTimers().schedule(showConvo, 500, TimeUnit.MILLISECONDS);
+						}
+						else
+						{
+							String msg = "<html><body>Connection Refused!<br>This name has already been taken!</body></html>";
+							form.getAuthScreen().changeNotice(msg, new Color(255, 69, 0));
+							form.enableInputs();
+							b.setText("Connect");
+							return;
+						}
 					}
 					else
 					{
 						String msg = "<html><body>Connection Refused!<br>Invalid Authentication Key</body></html>";
 						form.getAuthScreen().changeNotice(msg, Color.RED);
 						form.enableInputs();
-						b.setText("Login and Chat!");
-						cl.disconnect(true);
+						b.setText("Connect");
 						return;
 					}
 				}
@@ -117,7 +124,7 @@ public class LoginFunction implements ActionListener
 					String msg = "<html><body>Connection Refused!<br>Unknown Host: " + ip + "</body></html>";
 					form.getAuthScreen().changeNotice(msg, Color.RED);
 					form.enableInputs();
-					b.setText("Login and Chat!");
+					b.setText("Connect");
 					cl.disposeLinks();
 					return;
 				}

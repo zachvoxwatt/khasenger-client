@@ -6,6 +6,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
 import audio.AudioController;
@@ -70,12 +71,24 @@ public class ProgUI extends JFrame
 		repaint();
 	}
 	
+	public void displayLostConnection(String reason)
+	{
+		String info = String.format("Lost connection to server\nReason: %s", reason);
+		JOptionPane.showMessageDialog(this, info, "Uh-Oh! Something happened...", JOptionPane.WARNING_MESSAGE);
+	}
+	
 	public boolean isAppActive() { return this.appActive; }
 	
+	public AuthScreen getAuthScreen() { return this.authS; }
 	public ClientUser getClientUser() { return this.clusr; }
 	public AudioController getAudioController() { return this.aud; }
 	public KhasengerPanel getKhasengerPanel() { return this.kPanel; }
-	public NetworkClient iniNetClient(String a, String b, String c) { this.cl = new NetworkClient(a, b, c, this); return this.cl; } 
+	public NetworkClient iniNetClient(String a, String b, String c) 
+	{ 
+		this.cl = null; System.gc(); 
+		this.cl = new NetworkClient(a, b, c, this); 
+		return this.cl;
+	} 
 	public NetworkClient getNetClient() { return this.cl; }
 	
 	public static void main(String[] args) 
@@ -100,8 +113,9 @@ class InteractiveWindowActions implements WindowListener
 	@Override
 	public void windowClosing(WindowEvent e) 
 	{ 
-		if (parent.isAppActive()) this.parent.getNetClient().terminateConnection();
+		if (parent.isAppActive()) this.parent.getNetClient().leaveServerUnexpectedly();
 		this.parent.dispose();
+		System.exit(0);
 	}
 	@Override
 	public void windowClosed(WindowEvent e) {}

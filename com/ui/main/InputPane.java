@@ -3,9 +3,11 @@ package ui.main;
 import javax.swing.JTextArea;
 import javax.swing.KeyStroke;
 
-import ui.main.functions.InputPaneDocumentValidator;
-import ui.main.functions.LineBreakerKeyStroke;
-import ui.main.functions.MessageSenderKeystroke;
+import ui.main.functions.IPaneCopyKeyStroke;
+import ui.main.functions.IPaneDocumentValidator;
+import ui.main.functions.IPaneLineBreakerKeyStroke;
+import ui.main.functions.IPanePasteKeyStroke;
+import ui.main.functions.IPaneSendKeyStroke;
 
 public class InputPane extends JTextArea
 {
@@ -20,13 +22,19 @@ public class InputPane extends JTextArea
 		setFont(this.parent.getChatFont());
 		setWrapStyleWord(true);
 		setLineWrap(true);
-		getDocument().addDocumentListener(new InputPaneDocumentValidator(this));
+		getDocument().addDocumentListener(new IPaneDocumentValidator(this));
 		
 		this.getInputMap().put(KeyStroke.getKeyStroke("shift ENTER"), "breakLine");
-		this.getActionMap().put("breakLine", new LineBreakerKeyStroke(this));
+		this.getActionMap().put("breakLine", new IPaneLineBreakerKeyStroke(this));
 		
 		this.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "sendMessage");
-		this.getActionMap().put("sendMessage", new MessageSenderKeystroke(this));
+		this.getActionMap().put("sendMessage", new IPaneSendKeyStroke(this));
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("ctrl C"), "copyText");
+		this.getActionMap().put("copyText", new IPaneCopyKeyStroke(this));
+		
+		this.getInputMap().put(KeyStroke.getKeyStroke("ctrl V"), "pasteText");
+		this.getActionMap().put("pasteText", new IPanePasteKeyStroke(this));
 	}
 	
 	public KhasengerPanel getKhasengerPanel() { return this.parent; }

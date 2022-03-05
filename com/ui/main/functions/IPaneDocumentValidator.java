@@ -7,11 +7,11 @@ import javax.swing.event.DocumentListener;
 
 import ui.main.InputPane;
 
-public class InputPaneDocumentValidator implements DocumentListener
+public class IPaneDocumentValidator implements DocumentListener
 {
 	private InputPane ipane;
 	
-	public InputPaneDocumentValidator(InputPane ip) { this.ipane = ip; }
+	public IPaneDocumentValidator(InputPane ip) { this.ipane = ip; }
 	@Override
 	public void insertUpdate(DocumentEvent e) { update(); }
 	@Override

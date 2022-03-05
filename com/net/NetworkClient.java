@@ -30,55 +30,47 @@ public class NetworkClient
     	this.parent = pui;
     	this.clusr = this.parent.getClientUser();
     	this.ip = ip; this.seckey = seckey; this.clusr.setName(username);
-    	this.cpu = Executors.newScheduledThreadPool(5, new ThreadNamer());
+    	this.cpu = Executors.newScheduledThreadPool(2, new ThreadNamer());
     	
     	this.listener = new Runnable()
     	{
     		public void run() {
     			try {
 	    			if (isValidAssetsReady()) {
-	    				byte b = getFromServer.readByte();
+	    				String msgType = getFromServer.readUTF();
 	    				
-	    				switch (b) {
-	    				
-	    					//get incoming new user join message from server
-	    					case 70:
-	    						String newlyJoined = getFromServer.readUTF();
-	    						parent.getKhasengerPanel().appendTextToPane(newlyJoined);
-	    						parent.getKhasengerPanel().playSound("join_user");
-	    						break;
-	    					
-	    					//get incoming message from server
-	    					case 71:
-	    						String incomingText = getFromServer.readUTF();
-	    						parent.getKhasengerPanel().appendTextToPane(incomingText);
-	    						if (playRecv) parent.getKhasengerPanel().playSound("recv");
+	    				switch (msgType)
+	    				{
+	    					case "newMessage":
+	    						String comingText = getFromServer.readUTF();
+	    						parent.getKhasengerPanel().appendTextToPane(comingText);
+	    						if (playRecv) parent.getAudioController().play("recv");
 	    						else playRecv = true;
-	    						break;
-	    					
-	    					//server has acknowledged 'i am still alive' request
-	    					/*case 20:  instead of including this, default case is used.
-	    						break;*/
 	    						
-	    					//disconnect request
-	    					case -1:
-	    						disconnect();
-	    						break;
-	    					
-	    					//get incoming user leaving message from server
-	    					case -70:
-	    						String leavingUser = getFromServer.readUTF();
-	    						parent.getKhasengerPanel().appendTextToPane(leavingUser);
-	    						parent.getKhasengerPanel().playSound("leave");
 	    						break;
 	    						
-	    					//lost connection request
-	    					case -127:
-	    						parent.showAuthScreen();
+	    					case "newJoinedUser":
+	    						String notiJoin = getFromServer.readUTF();
+	    						parent.getKhasengerPanel().appendTextToPane(notiJoin);
+	    						parent.getAudioController().play("join_user");
+	    						break;
+	    						
+	    					case "userLeaving":
+	    						String notiLeave = getFromServer.readUTF();
+	    						parent.getKhasengerPanel().appendTextToPane(notiLeave);
+	    						parent.getAudioController().play("leave_user");
+	    						break;
+	    						
+	    					case "pong":
+	    						break;
+	    						
+	    					case "svShutdown":
+	    						sendToServer.writeUTF("confirmShutdown");
+	    						sendToServer.flush();
 	    						terminateConnection();
-	    						break;
-	    						
-	    					default:
+	    						disposeLinks();
+	    						parent.showAuthScreen();
+	    						parent.displayLostConnection("Server shutdown");
 	    						break;
 	    				}
 	    			}
@@ -91,7 +83,7 @@ public class NetworkClient
     	{
     		public void run()
     		{
-    			try { if (isValidAssetsReady()) { sendToServer.writeByte(2); sendToServer.flush(); }}
+    			try { if (isValidAssetsReady()) { sendToServer.writeUTF("ping"); sendToServer.flush(); }}
     			catch (Exception e) { e.printStackTrace(); }
     		}
     	};
@@ -108,19 +100,19 @@ public class NetworkClient
     	@Override 
     	public Thread newThread(Runnable r) { return new Thread(r, "Server Listener"); } 
     }
-   
+    
     public boolean connect()
     {
     	boolean success = false;
-    	
     	try
-        {
-            this.cSock = new Socket(this.ip, PORT);
-            this.sendToServer = new DataOutputStream(this.cSock.getOutputStream());
-            this.getFromServer = new DataInputStream(this.cSock.getInputStream());
-            success = true;
-        }
-        catch (Exception e) {} 
+    	{
+    		this.cSock = new Socket(this.ip, PORT);
+    		this.sendToServer = new DataOutputStream(this.cSock.getOutputStream());
+    		this.getFromServer = new DataInputStream(this.cSock.getInputStream());
+    		success = true;
+    	}
+    	catch (Exception e) { e.printStackTrace(); }
+    	
     	return success;
     }
     
@@ -129,97 +121,107 @@ public class NetworkClient
     	boolean success = false;
     	try
     	{
-    		this.sendToServer.writeByte(1);
+    		this.sendToServer.writeUTF("requestAuth");
     		this.sendToServer.writeUTF(this.seckey);
-    		this.sendToServer.writeUTF(this.clusr.getName());
     		this.sendToServer.flush();
-    		if (this.getFromServer.readByte() == 7) success = true;
+    		
+    		String returnMsg = this.getFromServer.readUTF();
+    		if (returnMsg.equals("accepted")) success = true;
     	}
-    	
-    	catch (Exception e) { e.printStackTrace(); }
+    	catch (Exception e ) { e.printStackTrace(); }
     	
     	return success;
     }
     
-    public void postMessage(String sender, String content)
+    public boolean requestNameValidation()
     {
+    	boolean success = false;
     	try
     	{
-    		this.sendToServer.writeByte(17);
-    		this.sendToServer.writeUTF(sender);
-    		this.sendToServer.writeUTF(content);
-    		this.sendToServer.flush();
-    		this.playRecv = false;
-    	}
-    	catch (Exception e) { e.printStackTrace(); }
-    }
-    
-    public void notifyLeave()
-    {
-    	try
-    	{
-    		this.sendToServer.writeByte(-69);
+    		this.sendToServer.writeUTF("requestValidateName");
     		this.sendToServer.writeUTF(this.clusr.getName());
     		this.sendToServer.flush();
-    		disconnect(true);
+    		
+    		String returnMsg = this.getFromServer.readUTF();
+    		if (returnMsg.equals("accepted")) success = true;
+    	}
+    	catch (Exception e ) { e.printStackTrace(); }
+    	
+    	return success;
+    }
+    
+    public void postMessage(String content)
+    {
+    	try
+    	{
+    		this.playRecv = false;
+    		this.sendToServer.writeUTF("requestPostMSG");
+    		this.sendToServer.writeUTF(content);
+    		this.sendToServer.flush();
+    		this.parent.getAudioController().play("send");
     	}
     	catch (Exception e) { e.printStackTrace(); }
     }
     
-    public void disconnect() { disconnect(false); }
-
-    public void disconnect(boolean b)
+    public void leaveServer()
     {
-        try
-        {
-        	this.sendToServer.writeByte(-1);
-        	this.sendToServer.writeUTF(this.clusr.getName());
-        	this.sendToServer.flush();
-        	
-            this.cSock.close();
-            this.getFromServer.close();
-            this.sendToServer.close();
-            
-            if (b)
-            {
-            	this.cSock = null;
-            	this.getFromServer = null;
-            	this.sendToServer = null;
-            }
-        }
-        catch (Exception e) { e.printStackTrace(); }
+    	try
+    	{
+    		this.sendToServer.writeUTF("userLeave");
+    		this.sendToServer.writeUTF(this.clusr.getName());
+    		this.sendToServer.flush();
+    		
+    		terminateConnection();
+    		disposeLinks();
+    	}
+    	
+    	catch (Exception e) { e.printStackTrace(); }
     }
     
-    public void disposeLinks()
+    public void leaveServerUnexpectedly()
     {
-		this.cSock = null;
-		this.getFromServer = null;
-		this.sendToServer = null;
+    	try
+    	{
+    		this.sendToServer.writeUTF("userLeaveUnexpected");
+    		this.sendToServer.writeUTF(this.clusr.getName());
+    		this.sendToServer.flush();
+    		
+    		terminateConnection();
+    		disposeLinks();
+    	}
+    	
+    	catch (Exception e) { e.printStackTrace(); }
     }
     
     public void terminateConnection()
     {
     	try
     	{
-    		this.sendToServer.writeByte(-127);
-    		this.sendToServer.writeUTF(this.clusr.getName());
-    		this.sendToServer.flush();
-    		
     		this.cSock.close();
-            this.getFromServer.close();
-            this.sendToServer.close();
-            
-            this.cSock = null;
-        	this.getFromServer = null;
-        	this.sendToServer = null;
+    		this.sendToServer.close();
+    		this.getFromServer.close();
     	}
     	catch (Exception e) { e.printStackTrace(); }
     }
     
-    public void resetInputs(String a, String b, String c) 
+    public void disposeLinks()
+    {
+    	this.cSock = null;
+    	this.sendToServer = null;
+    	this.getFromServer = null;
+    }
+    
+    public void resetInputs(String ip, String seckey, String name)
     { 
-    	this.ip = a; 
-    	this.seckey = b; 
-    	this.clusr.setName(c);
+    	this.ip = ip; 
+    	this.seckey = seckey; 
+    	this.clusr.setName(name);
+    }
+    
+    public NetworkClient getNetClient() { return this; }
+    public NetworkClient iniNetClient(String ip, String seckey, String name)
+    {
+    	resetInputs(ip, seckey, name);
+    	return this;
     }
 }

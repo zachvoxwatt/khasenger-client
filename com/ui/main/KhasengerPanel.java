@@ -19,9 +19,9 @@ import audio.AudioController;
 import net.ClientUser;
 import net.NetworkClient;
 import ui.ProgUI;
-import ui.context_menu.ContextMenu;
+import ui.context_menu.ConversationPaneContextMenu;
+import ui.context_menu.InputPaneContextMenu;
 import ui.main.functions.DisconnectFunction;
-import ui.main.functions.MouseDetector;
 import ui.main.functions.PostMessageFunction;
 
 public class KhasengerPanel extends JPanel 
@@ -31,24 +31,22 @@ public class KhasengerPanel extends JPanel
 	
 	private Font chatFont;
 	private ProgUI parent;
+	private String copiedText = "";
 	private JButton send, disconnect;
 	private InputPane iPane;
 	private ClientUser clusr;
-	private ContextMenu rMenu;
 	private JScrollPane convoScroller, inputScroller;
-	private MouseDetector convoDe, iPaneDe;
 	private NetworkClient cl;
-	private AudioController aud;
 	private ConversationPane convoPane;
 	private ScheduledExecutorService timers;
-	
+	private InputPaneContextMenu ipCM;
+	private ConversationPaneContextMenu cpCM;
 	
 	public KhasengerPanel(ProgUI pui, NetworkClient ncl, AudioController au)
 	{
 		super();
 		this.parent = pui;
 		this.clusr = this.parent.getClientUser();
-		this.aud = au;
 		this.timers = Executors.newSingleThreadScheduledExecutor(new TimerNamer());
 		this.cl = ncl;
 			setLayout(new FlowLayout(FlowLayout.LEADING, 5, 5));
@@ -58,12 +56,11 @@ public class KhasengerPanel extends JPanel
 		int scx = 0, scy = 0;
 		
 		this.chatFont = new Font("Arial", Font.PLAIN, 18);
-		this.rMenu = new ContextMenu(this);
+		this.cpCM = new ConversationPaneContextMenu(this);
 		
 		this.convoPane = new ConversationPane(this);
-			convoPane.setComponentPopupMenu(this.rMenu);
-			this.convoDe = new MouseDetector(this.convoPane);
-			convoPane.addMouseListener(convoDe);
+			convoPane.setComponentPopupMenu(this.cpCM);
+			
 		this.convoScroller = new JScrollPane(this.convoPane);
 			scx = (int) ((int) this.getPreferredSize().getWidth() * 99.3 / 100);
 			scy = (int) ((int) this.getPreferredSize().getHeight() * 76 / 100);
@@ -84,9 +81,9 @@ public class KhasengerPanel extends JPanel
 			add(separator);
 			
 		this.iPane = new InputPane(this);
-			iPane.setComponentPopupMenu(this.rMenu);
-			this.iPaneDe = new MouseDetector(this.iPane);
-			iPane.addMouseListener(iPaneDe);
+		this.ipCM = new InputPaneContextMenu(this);
+			iPane.setComponentPopupMenu(this.ipCM);
+			
 		this.inputScroller = new JScrollPane(this.iPane);
 			scx = (int) ((int) this.getPreferredSize().getWidth() * 66.1 / 100);
 			scy = (int) ((int) this.getPreferredSize().getHeight() * 1.925 / 10);
@@ -135,15 +132,13 @@ public class KhasengerPanel extends JPanel
 		String username = this.clusr.getName();
 		String sentText = String.format("<%s> %s\n\n", username, this.getInputPane().getText());
 		
-		this.aud.play("send");
-		this.cl.postMessage(username, sentText);
+		this.cl.postMessage(sentText);
 		this.iPane.setText("");
 	}
-	
-	public void playSound(String key) { this.aud.play(key); }
 
-	public MouseDetector getConvoPaneMD() { return this.convoDe; }
-	public MouseDetector getInputPaneMD() { return this.iPaneDe; }
+	public void setCopiedText(String text) { this.copiedText = text; }
+	
+	public String getCopiedText() { return this.copiedText; }
 	public NetworkClient getNetClient() { return this.cl; }
 	public Font getChatFont() { return this.chatFont; }
 	public ProgUI getMainProgUI() { return this.parent; }

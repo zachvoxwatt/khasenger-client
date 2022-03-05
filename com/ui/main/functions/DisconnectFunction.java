@@ -14,7 +14,7 @@ public class DisconnectFunction implements ActionListener
 	@Override
 	public void actionPerformed(ActionEvent e)
 	{
-		this.kPanel.getNetClient().notifyLeave();
+		this.kPanel.getNetClient().leaveServer();
 		this.kPanel.getMainProgUI().showAuthScreen();
 	}
 }

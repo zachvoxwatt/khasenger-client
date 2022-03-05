@@ -72,7 +72,7 @@ public class AuthForm extends JPanel
 			gbc.gridx = 1; gbc.gridy = 3; gbc.insets = generateInsets(7, 0, 7, 0);
 			add(inputName, gbc);
 			
-		this.connect = new JButton("Login and Chat!");
+		this.connect = new JButton("Connect");
 			connect.setFont(new Font("Segoe UI", Font.PLAIN, 20));
 			connect.setPreferredSize(new Dimension(250, 35));
 			connect.setFocusPainted(false);

@@ -75,7 +75,7 @@ public class AudioController
 			this.sfxMap.put(key, sfxs);
 		}
 		
-		setScheduler(Executors.newScheduledThreadPool(3, new ThreadNamers()));
+		setScheduler(Executors.newScheduledThreadPool(2, new ThreadNamers()));
 		
 		//A runnable to remove unused or unnecessary sounds
 		purger = new Runnable()

@@ -5,10 +5,10 @@ import javax.swing.event.DocumentListener;
 
 import ui.main.ConversationPane;
 
-public class ConversationPaneUpdater implements DocumentListener
+public class CPaneUpdater implements DocumentListener
 {
 	private ConversationPane cpane;
-	public ConversationPaneUpdater(ConversationPane cpane) { this.cpane = cpane; }
+	public CPaneUpdater(ConversationPane cpane) { this.cpane = cpane; }
 	@Override
 	public void insertUpdate(DocumentEvent e) { this.cpane.getKhasengerPanel().getConvoScroller().repaint(); }
 	@Override
