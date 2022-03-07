@@ -24,12 +24,14 @@ public class AuthScreen extends JPanel
 	private JPanel margin1, margin2;
 	private AuthForm form;
 	private JLabel connectionStatus;
+	private AuthScreenThreadNamer thrdNamer;
 	private ScheduledExecutorService dthrds;
 	
 	public AuthScreen(ProgUI pui)
 	{
 		super();
-			this.dthrds = Executors.newSingleThreadScheduledExecutor(new DiscreteThreadsNamer());
+			this.thrdNamer = new AuthScreenThreadNamer();
+			this.dthrds = Executors.newSingleThreadScheduledExecutor(this.thrdNamer);
 			this.parent = pui;
 			setPreferredSize(new Dimension(this.wx, this.wy));
 			setLayout(new BorderLayout());
@@ -63,11 +65,10 @@ public class AuthScreen extends JPanel
 		repaint();
 	}
 	
-	class DiscreteThreadsNamer implements ThreadFactory
-	{ 
-		private int count = 1;
+	class AuthScreenThreadNamer implements ThreadFactory
+	{
     	@Override 
-    	public Thread newThread(Runnable r) { return new Thread(r, "Discrete Thread #" + ++count); } 
+    	public Thread newThread(Runnable r) { return new Thread(r, "Auth Screen Thread"); } 
     }
 	
 	Runnable timeoutMessage = new Runnable() { public void run() {connectionStatus.setVisible(false);}};
@@ -81,6 +82,9 @@ public class AuthScreen extends JPanel
 		
 		this.dthrds.schedule(timeoutMessage, 2, TimeUnit.SECONDS);	
 	}
+	
+	public void idle() { dthrds.shutdownNow(); this.connectionStatus.setVisible(false); }
+	public void restart() { dthrds = Executors.newSingleThreadScheduledExecutor(this.thrdNamer); }
 	
 	public ScheduledExecutorService getTimers() { return this.dthrds; }
 	public ProgUI getMainProgClass() { return this.parent; }

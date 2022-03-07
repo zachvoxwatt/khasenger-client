@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.EventQueue;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.util.Objects;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -21,11 +22,11 @@ public class ProgUI extends JFrame
 	private boolean appActive = false;
 	private static final long serialVersionUID = -577119706971836732L;
 
-	private AudioController aud;
 	private ClientUser clusr;
+	private AuthScreen authS;
 	private NetworkClient cl;
 	private KhasengerPanel kPanel;
-	private AuthScreen authS;
+	private AudioController aud;
 	
 	public ProgUI()
 	{
@@ -34,6 +35,7 @@ public class ProgUI extends JFrame
 			setTitle("Khasenger");
 			setLayout(new BorderLayout());
 		
+		this.kPanel = null;
 		this.clusr = new ClientUser();
 		this.aud = new AudioController(new JSONDataParser().getDirectoryMap());	
 		this.authS = new AuthScreen(this);
@@ -48,10 +50,11 @@ public class ProgUI extends JFrame
 	public void showAuthScreen()
 	{
 		this.appActive = false;
+		
+		this.authS.restart();
 		remove(this.kPanel);
 		add(this.authS);
-		this.kPanel = null;
-		System.gc();
+		this.kPanel.idle();
 		
 		pack();
 		setLocationRelativeTo(null);
@@ -62,9 +65,16 @@ public class ProgUI extends JFrame
 	public void showConversationPane()
 	{
 		this.appActive = true;
-		this.kPanel = new KhasengerPanel(this, this.cl, this.aud);
+		
+		if (Objects.isNull(this.kPanel)) 
+			this.kPanel = new KhasengerPanel(this);
+		else 
+			this.kPanel.restart();
+			
 		remove(this.authS);
 		add(this.kPanel);
+		this.authS.idle();
+		
 		pack();
 		setLocationRelativeTo(null);
 		revalidate();
