@@ -10,6 +10,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -66,6 +67,7 @@ public class KhasengerPanel extends JPanel
 			scx = (int) ((int) this.getPreferredSize().getWidth() * 99.3 / 100);
 			scy = (int) ((int) this.getPreferredSize().getHeight() * 76 / 100);
 			this.convoScroller.setPreferredSize(new Dimension(scx, scy));
+			this.convoScroller.setBorder(BorderFactory.createEmptyBorder());
 			this.convoScroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			this.convoScroller.getViewport().addChangeListener(new ViewChangeListener());
 			add(this.convoScroller);
@@ -88,6 +90,7 @@ public class KhasengerPanel extends JPanel
 			scx = (int) ((int) this.getPreferredSize().getWidth() * 66.1 / 100);
 			scy = (int) ((int) this.getPreferredSize().getHeight() * 1.925 / 10);
 			this.inputScroller.setPreferredSize(new Dimension(scx, scy));
+			this.inputScroller.setBorder(BorderFactory.createEmptyBorder());
 			this.inputScroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			add(this.inputScroller);
 			
